@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 using namespace std;
 
@@ -31,6 +32,12 @@ protected:
     string commodityName;
 
 public:
+    Commodity() {
+        price = 0;
+        description = "";
+        commodityName = "";
+    }
+
     Commodity(int price, string commodityName, string description) {
         this->price = price;
         this->commodityName = commodityName;
@@ -44,8 +51,20 @@ public:
         cout << "----------------------------" << endl;
     }
 
+    void detail(int amount) {
+        cout << commodityName << endl;
+        cout << "price: " << price << endl;
+        cout << "description: " << description << endl;
+        cout << "x " << amount << endl;
+        cout << "----------------------------" << endl;
+    }
+
     string getName() {
         return commodityName;
+    }
+
+    int getPrice() {
+        return price;
     }
 };
 
@@ -53,6 +72,10 @@ class CommodityList {
 private:
     vector<Commodity> commodities;
 
+
+    /*
+     * TODO: The commodity name can not be repeated
+     * */
 public:
     void showCommoditiesDetail() {
         for (int i = 0; i < commodities.size(); i++) {
@@ -90,11 +113,54 @@ public:
 
 class ShoppingCart {
 private:
-    vector<Commodity> content;
+    unordered_map<string, pair<Commodity, int>> content;
 
 public:
     void push(Commodity entry) {
-        content.push_back(entry);
+        if (content.count(entry.getName())) {
+            content[entry.getName()].second++;
+        } else {
+            content[entry.getName()].first = entry;
+            content[entry.getName()].second = 1;
+        }
+    }
+
+    void showCart() {
+        int no = 1;
+        for (auto& it : content) {
+            pair<Commodity, int>& entry = it.second;
+            cout << no << ". " << endl;
+            entry.first.detail(entry.second);
+            no++;
+        }
+    }
+
+    int size() {
+        return (int)content.size();
+    }
+
+    void remove(int index) {
+        auto it = content.begin();
+        for (int i = 0; i < index; i++) {
+            it++;
+        }
+        content.erase(it);
+    }
+
+    int checkOut() {
+        int totalPrice = 0;
+
+        for (auto& it : content) {
+            pair<Commodity, int>& entry = it.second;
+            totalPrice += entry.first.getPrice() * entry.second;
+        }
+
+        content.clear();
+        return totalPrice;
+    }
+
+    bool empty() {
+        return content.empty();
     }
 };
 
@@ -121,7 +187,7 @@ private:
         return stoi(input);
     }
 
-    int inputCheck(string input, int maxChoiceLen) {
+    int inputCheck(string input, int maxChoiceLen, bool noZero) {
         // Change input to the general integer
         int choice = 0;
         for (int i = 0; i < input.size(); i++) {
@@ -132,18 +198,22 @@ private:
             }
         }
 
-        return (choice <= maxChoiceLen && choice >= 0)? choice : -1;
+        if (noZero) {
+            return (choice <= maxChoiceLen && choice > 0) ? choice : -1;
+        } else {
+            return (choice <= maxChoiceLen && choice >= 0) ? choice : -1;
+        }
     }
 
-    int getInput(int maxChoiceLen) {
+    int getInput(int maxChoiceLen, bool noZero = false) {
         string input;
 
         cin >> input;
-        int choice = inputCheck(input, maxChoiceLen);
+        int choice = inputCheck(input, maxChoiceLen, noZero);
         while (choice == -1) {
             cout << "your input is wrong, please input again:" << endl;
             cin >> input;
-            choice = inputCheck(input, maxChoiceLen);
+            choice = inputCheck(input, maxChoiceLen, noZero);
         }
 
         return choice;
@@ -194,15 +264,24 @@ private:
         cout << endl;
     }
 
-    UMode askMode() {
+    void askMode() {
         string input;
 
         cout << "Are you a general user or a manager?" << endl
-             << "1. general user, 2. manager" << endl;
+             << "1. general user, 2. manager" << endl
+             << "Or type 0 to close the store" << endl;
 
         int choice = getInput(2);
 
-        return (choice == 1) ? UMode::USER : UMode::MANAGER;
+        userStatus = (choice == 2) ? UMode::MANAGER : UMode::USER;
+
+        if (choice == 0) {
+            storeStatus = SMode::CLOSE;
+        } else if (userStatus == UMode::USER) {
+            storeStatus = SMode::DECIDING;
+        } else if (userStatus == UMode::MANAGER) {
+            storeStatus = SMode::MANAGING;
+        }
     }
 
     void decideService() {
@@ -212,6 +291,7 @@ private:
              << "1. Buy the commodity you want" << endl
              << "2. Check your shopping cart" << endl
              << "3. Check out" << endl
+             << "Or type 0 to exit user mode" << endl
              << "You may choose what you need:" << endl;
 
         int choice = getInput(3);
@@ -222,13 +302,13 @@ private:
             storeStatus = SMode::CART_CHECKING;
         } else if (choice == 3) {
             storeStatus = SMode::CHECK_OUT;
+        } else if (choice == 0) {
+            storeStatus = SMode::OPENING;
         }
     }
 
     void chooseCommodity() {
         string input;
-//        cout << "Here are our commodity:" << endl;
-//        commodityList.showCommoditiesDetail();
         showCommodity();
         cout << "Or input 0 to exit shopping" << endl;
 
@@ -239,8 +319,68 @@ private:
             storeStatus = SMode::DECIDING;
         } else {
             // May be some bug here, test later
-            cart.push(commodityList.get(choice));
+            cart.push(commodityList.get(choice - 1));
         }
+    }
+
+    void showCart() {
+        if (cart.empty()) {
+            cout << "Your shopping cart is empty" << endl;
+            storeStatus = SMode::DECIDING;
+            return;
+        }
+
+        int choice;
+        do {
+            cout << "Here is the current cart content:" << endl;
+            cart.showCart();
+
+            cout << "Do you want to delete the entry from the cart?" << endl
+                 << "1. yes, 2. no" << endl;
+
+            choice = getInput(2, true);
+
+            if (choice == 1) {
+                cout << "Which one do you want to delete(type the commodity index)?" << endl
+                     << "Or type 0 to regret" << endl;
+                int index = getInput(cart.size());
+                if (index == 0) {
+                    break;
+                }
+                cart.remove(index - 1);
+            }
+        } while (choice == 1);
+
+        cout << "Do you want to checkout?" << endl
+             << "1. yes, 2. No, I want to buy more" << endl;
+        choice = getInput(2, true);
+        if (choice == 1) {
+            storeStatus = SMode::CHECK_OUT;
+        } else {
+            storeStatus = SMode::DECIDING;
+        }
+    }
+
+    void checkOut() {
+        if (cart.empty()) {
+            cout << "Your shopping cart is empty, nothing can checkout" << endl;
+        } else {
+            cout << "Here is the current cart content:" << endl;
+            cart.showCart();
+            cout << "Are you sure you want to buy all of them?" << endl
+                 << "1. Yes, sure, 2. No, I want to buy more" << endl;
+
+            int choice = getInput(2, true);
+
+            if (choice == 1) {
+                int amount = cart.checkOut();
+                cout << "Total Amount: " << amount << endl;
+                cout << "Thank you for your coming!" << endl;
+                cout << "------------------------------" << endl << endl;
+            }
+        }
+
+        storeStatus = SMode::DECIDING;
     }
 
     void managerInterface() {
@@ -266,24 +406,19 @@ private:
 
     void userInterface() {
         if (storeStatus == SMode::OPENING) {
-            userStatus = askMode();
-            if (userStatus == UMode::USER) {
-                storeStatus = SMode::DECIDING;
-            } else {
-                storeStatus = SMode::MANAGING;
-            }
+            askMode();
         } else if (storeStatus == SMode::DECIDING) {
             decideService();
         } else if (storeStatus == SMode::SHOPPING) {
             chooseCommodity();
         } else if (storeStatus == SMode::CART_CHECKING) {
-            cout << "cart" << endl;
+            showCart();
         } else if (storeStatus == SMode::CHECK_OUT) {
-            cout << "check out" << endl;
+            checkOut();
         } else if (storeStatus == SMode::MANAGING) {
             managerInterface();
         } else if (storeStatus == SMode::CLOSE) {
-            cout << "closing" << endl;
+            return;
         }
     }
 
@@ -294,6 +429,12 @@ public:
     }
 
     void open() {
+        Commodity* com1 = new Commodity(100, "mashu", "an ugly man");
+        Commodity* com2 = new Commodity(50000, "macbook", "The macbook with macOS produced by Apple.inc");
+        Commodity* com3 = new Commodity(3000, "ASUS", "The high performance computer");
+        commodityList.add(com1);
+        commodityList.add(com2);
+        commodityList.add(com3);
         storeStatus = SMode::OPENING;
         while (storeStatus != SMode::CLOSE) {
             userInterface();
