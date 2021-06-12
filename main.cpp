@@ -7,33 +7,85 @@ using namespace std;
 
 class Commodity;
 class Store;
+class InputHandler;
 
 
-/*
- * The function is used to read a full line into a string variable
- * INPUT: None
- * RETURN: Full line input by user
- * */
-string readWholeLine() {
-    string input;
-    cin.get();
-    getline(cin, input);
-    return input;
-}
+class InputHandler {
+public:
+    /*
+     * The function is used to read a full line into a string variable
+     * INPUT: None
+     * RETURN: Full line input by user
+     * */
+    static string readWholeLine() {
+        string input;
+        cin.get();
+        getline(cin, input);
+        return input;
+    }
 
-/*
- * This function is used to configure whether the input string is a number
- * INPUT: A string
- * RETURN: Bool. True if input string is a number, otherwise false.
- */
-bool isNum(string& str) {
-    for (int i = 0; i < str.size(); i++) {
-        if (!isdigit(str[i])) {
+    /*
+     * This function is used to configure whether the input string is a number
+     * INPUT: A string
+     * RETURN: Bool. True if input string is a number, otherwise false.
+     */
+    static bool isNum(string& str) {
+        for (int i = 0; i < str.size(); i++) {
+            if (!isdigit(str[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static bool isValidNum(string& str) {
+        if (isNum(str) && stoi(str) <= 0)
             return false;
+        return true;
+    }
+
+    static int numberInput() {
+        string input;
+        cin >> input;
+        while (!isValidNum(input)) {
+            cout << "Please input again your input is NOT an integer or is lower than or equal to 0:" << endl;
+            cin >> input;
+        }
+        return stoi(input);
+    }
+
+    static int inputCheck(string input, int maxChoiceLen, bool noZero) {
+        // Change input to the general integer
+        int choice = 0;
+        for (int i = 0; i < input.size(); i++) {
+            if (isdigit(input[i])) {
+                choice = choice * 10 + (input[i] - '0');
+            } else {
+                return -1;
+            }
+        }
+
+        if (noZero) {
+            return (choice <= maxChoiceLen && choice > 0) ? choice : -1;
+        } else {
+            return (choice <= maxChoiceLen && choice >= 0) ? choice : -1;
         }
     }
-    return true;
-}
+
+    static int getInput(int maxChoiceLen, bool noZero = false) {
+        string input;
+
+        cin >> input;
+        int choice = inputCheck(input, maxChoiceLen, noZero);
+        while (choice == -1) {
+            cout << "your input is wrong, please input again:" << endl;
+            cin >> input;
+            choice = inputCheck(input, maxChoiceLen, noZero);
+        }
+
+        return choice;
+    }
+};
 
 /*
  * Commodity is about an item which the user can buy and the manager can add or delete.
@@ -83,6 +135,15 @@ public:
         cout << "----------------------------" << endl;
     }
 
+    virtual void userSpecifiedCommodity() {
+        cout << "Please input the commodity name:" << endl;
+        commodityName = InputHandler::readWholeLine();
+        cout << "Please input the commodity price:" << endl;
+        price = InputHandler::numberInput();
+        cout << "Please input the detail of the commodity:" << endl;
+        description = InputHandler::readWholeLine();
+    }
+
     /*
      * The getter function of commodityName
      */
@@ -98,7 +159,7 @@ public:
     }
 };
 
-class Computer : Commodity {
+class Computer : public Commodity {
 protected:
     string cpu;
     string gpu;
@@ -106,6 +167,12 @@ protected:
     int ssd;
 
 public:
+    ~Computer() = default;
+
+    Computer() {
+        ram = 0;
+        ssd = 0;
+    }
 
     void detail() override {
         cout << commodityName << endl;
@@ -129,15 +196,39 @@ public:
         cout << "x " << amount << endl;
         cout << "----------------------------" << endl;
     }
+
+    void userSpecifiedCommodity() override {
+        cout << "Please input the commodity name:" << endl;
+        commodityName = InputHandler::readWholeLine();
+        cout << "Please input the commodity price:" << endl;
+        price = InputHandler::numberInput();
+        cout << "What is the CPU of this computer?" << endl;
+        cpu = InputHandler::readWholeLine();
+        cout << "What is the RAM capacity of this computer?" << endl;
+        ram = InputHandler::numberInput();
+        cout << "What is the GPU of this computer?" << endl;
+        gpu = InputHandler::readWholeLine();
+        cout << "What is the SSD capacity of this computer?" << endl;
+        ssd = InputHandler::numberInput();
+        cout << "Please input the detail of the commodity:" << endl;
+        description = InputHandler::readWholeLine();
+    }
 };
 
-class Keyboard : Commodity {
+class Keyboard : public Commodity {
 protected:
     int numOfKeys;
     bool hasBacklit;
     string axis;
 
 public:
+    ~Keyboard() = default;
+
+    Keyboard() {
+        numOfKeys = 0;
+        hasBacklit = false;
+    }
+
     void detail() override {
         cout << commodityName << endl;
         cout << "price: " << price << endl;
@@ -157,6 +248,22 @@ public:
         cout << "description: " << description << endl;
         cout << "x " << amount << endl;
         cout << "----------------------------" << endl;
+    }
+
+    void userSpecifiedCommodity() override {
+        cout << "Please input the commodity name:" << endl;
+        commodityName = InputHandler::readWholeLine();
+        cout << "Please input the commodity price:" << endl;
+        price = InputHandler::numberInput();
+        cout << "What is the amount of the keys?" << endl;
+        numOfKeys = InputHandler::numberInput();
+        cout << "What is the axis of the keyboard?" << endl;
+        axis = InputHandler::readWholeLine();
+        cout << "Is this keyboard has backlit? 1. yes, 2. no" << endl;
+        int choice = InputHandler::getInput(2);
+        hasBacklit = (choice == 1);
+        cout << "Please input the detail of the commodity:" << endl;
+        description = InputHandler::readWholeLine();
     }
 };
 
@@ -168,7 +275,7 @@ public:
  */
 class CommodityList {
 private:
-    vector<Commodity> commodities;
+    vector<Commodity*> commodities;
 
 public:
     /*
@@ -180,7 +287,7 @@ public:
     void showCommoditiesDetail() {
         for (int i = 0; i < commodities.size(); i++) {
             cout << i + 1 << ". ";
-            commodities[i].detail();
+            commodities[i]->detail();
         }
     }
 
@@ -192,7 +299,7 @@ public:
      */
     void showCommoditiesName() {
         for (int i = 0; i < commodities.size(); i++) {
-            cout << i + 1 << ". " << commodities[i].getName() << endl;
+            cout << i + 1 << ". " << commodities[i]->getName() << endl;
         }
     }
 
@@ -219,7 +326,7 @@ public:
      * INPUT: Integer. The index of that commodity
      * RETURN: Commodity. The wanted commodity object
      */
-    Commodity get(int index) {
+    Commodity* get(int index) {
         return commodities[index];
     }
 
@@ -229,7 +336,7 @@ public:
      * RETURN: None
      */
     void add(Commodity* newCommodity) {
-        commodities.push_back(*newCommodity);
+        commodities.push_back(newCommodity);
     }
 
     /*
@@ -242,7 +349,7 @@ public:
         bool exist = false;
 
         for (auto entry : commodities) {
-            if (entry.getName() == commodity->getName()) {
+            if (entry->getName() == commodity->getName()) {
                 exist = true;
                 break;
             }
@@ -270,7 +377,7 @@ public:
  */
 class ShoppingCart {
 private:
-    unordered_map<string, pair<Commodity, int>> content;
+    unordered_map<string, pair<Commodity*, int>> content;
 
 public:
 
@@ -281,12 +388,12 @@ public:
      * INPUT: Commodity. The object need to be pushed.
      * OUTPUT: None.
      */
-    void push(Commodity entry) {
-        if (content.count(entry.getName())) {
-            content[entry.getName()].second++;
+    void push(Commodity* entry) {
+        if (content.count(entry->getName())) {
+            content[entry->getName()].second++;
         } else {
-            content[entry.getName()].first = entry;
-            content[entry.getName()].second = 1;
+            content[entry->getName()].first = entry;
+            content[entry->getName()].second = 1;
         }
     }
 
@@ -298,9 +405,9 @@ public:
     void showCart() {
         int no = 1;
         for (auto& it : content) {
-            pair<Commodity, int>& entry = it.second;
+            pair<Commodity*, int>& entry = it.second;
             cout << no << ". " << endl;
-            entry.first.detail(entry.second);
+            entry.first->detail(entry.second);
             no++;
         }
     }
@@ -337,8 +444,8 @@ public:
         int totalPrice = 0;
 
         for (auto& it : content) {
-            pair<Commodity, int>& entry = it.second;
-            totalPrice += entry.first.getPrice() * entry.second;
+            pair<Commodity*, int>& entry = it.second;
+            totalPrice += entry.first->getPrice() * entry.second;
         }
 
         content.clear();
@@ -369,69 +476,24 @@ private:
     CommodityList commodityList;
     ShoppingCart cart;
 
-    bool isValidNum(string& str) {
-        if (isNum(str) && stoi(str) <= 0)
-            return false;
-        return true;
-    }
-
-    int numberInput() {
-        string input;
-        cin >> input;
-        while (!isValidNum(input)) {
-            cout << "Please input again your input is NOT an integer or is lower than or equal to 0:" << endl;
-            cin >> input;
-        }
-        return stoi(input);
-    }
-
-    int inputCheck(string input, int maxChoiceLen, bool noZero) {
-        // Change input to the general integer
-        int choice = 0;
-        for (int i = 0; i < input.size(); i++) {
-            if (isdigit(input[i])) {
-                choice = choice * 10 + (input[i] - '0');
-            } else {
-                return -1;
-            }
-        }
-
-        if (noZero) {
-            return (choice <= maxChoiceLen && choice > 0) ? choice : -1;
-        } else {
-            return (choice <= maxChoiceLen && choice >= 0) ? choice : -1;
-        }
-    }
-
-    int getInput(int maxChoiceLen, bool noZero = false) {
-        string input;
-
-        cin >> input;
-        int choice = inputCheck(input, maxChoiceLen, noZero);
-        while (choice == -1) {
-            cout << "your input is wrong, please input again:" << endl;
-            cin >> input;
-            choice = inputCheck(input, maxChoiceLen, noZero);
-        }
-
-        return choice;
-    }
-
     void commodityInput() {
-        string name, detail;
-        int price;
         Commodity* newCom;
 
-        cout << "Please input the commodity name:" << endl;
-        name = readWholeLine();
-        cout << "Please input the commodity price:" << endl;
-        price = numberInput();
-        cout << "Please input the detail of the commodity:" << endl;
-        detail = readWholeLine();
+        cout << "Which type of commodity you want to add?" << endl
+             << "1. Computer, 2. Keyboard" << endl;
 
-        newCom = new Commodity(price, name, detail);
+        int choice = InputHandler::getInput(2);
+
+        if (choice == 1) {
+            newCom = new Computer();
+        } else {
+            newCom = new Keyboard();
+        }
+        newCom->userSpecifiedCommodity();
+
         if (commodityList.isExist(newCom)) {
-            cout << "[WARNING] " << name << " is exist in the store. If you want to edit it, please delete it first" << endl;
+            cout << "[WARNING] " << newCom->getName()
+                 << " is exist in the store. If you want to edit it, please delete it first" << endl;
         } else {
             commodityList.add(newCom);
         }
@@ -449,7 +511,7 @@ private:
         cout << "Or type 0 to regret" << endl
              << "Which one do you want to delete?" << endl;
 
-        choice = getInput(commodityList.size());
+        choice = InputHandler::getInput(commodityList.size());
 
         if (choice != 0) {
             commodityList.remove(choice - 1);
@@ -474,7 +536,7 @@ private:
              << "1. general user, 2. manager" << endl
              << "Or type 0 to close the store" << endl;
 
-        int choice = getInput(2);
+        int choice = InputHandler::getInput(2);
 
         userStatus = (choice == 2) ? UMode::MANAGER : UMode::USER;
 
@@ -497,7 +559,7 @@ private:
              << "Or type 0 to exit user mode" << endl
              << "You may choose what you need:" << endl;
 
-        int choice = getInput(3);
+        int choice = InputHandler::getInput(3);
 
         if (choice == 1) {
             storeStatus = SMode::SHOPPING;
@@ -515,7 +577,7 @@ private:
         showCommodity();
         cout << "Or input 0 to exit shopping" << endl;
 
-        int choice = getInput(commodityList.size());
+        int choice = InputHandler::getInput(commodityList.size());
 
         // Push the commodity into shopping cart here
         if (choice == 0) {
@@ -541,12 +603,12 @@ private:
             cout << "Do you want to delete the entry from the cart?" << endl
                  << "1. yes, 2. no" << endl;
 
-            choice = getInput(2, true);
+            choice = InputHandler::getInput(2, true);
 
             if (choice == 1) {
                 cout << "Which one do you want to delete(type the commodity index)?" << endl
                      << "Or type 0 to regret" << endl;
-                int index = getInput(cart.size());
+                int index = InputHandler::getInput(cart.size());
                 if (index == 0) {
                     break;
                 }
@@ -556,7 +618,7 @@ private:
 
         cout << "Do you want to checkout?" << endl
              << "1. yes, 2. No, I want to buy more" << endl;
-        choice = getInput(2, true);
+        choice = InputHandler::getInput(2, true);
         if (choice == 1) {
             storeStatus = SMode::CHECK_OUT;
         } else {
@@ -573,7 +635,7 @@ private:
             cout << "Are you sure you want to buy all of them?" << endl
                  << "1. Yes, sure, 2. No, I want to buy more" << endl;
 
-            int choice = getInput(2, true);
+            int choice = InputHandler::getInput(2, true);
 
             if (choice == 1) {
                 int amount = cart.checkOut();
@@ -594,7 +656,7 @@ private:
              << "Or type 0 to exit manager mode" << endl
              << "Which action do you need?" << endl;
 
-        int choice = getInput(3);
+        int choice = InputHandler::getInput(3);
 
         if (choice == 1) {
             commodityInput();
