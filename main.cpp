@@ -9,6 +9,11 @@ class Commodity;
 class Store;
 
 
+/*
+ * The function used to read a full line into a string variable
+ * INPUT: None
+ * RETURN: Full line input by user
+ * */
 string readWholeLine() {
     string input;
     cin.get();
@@ -16,6 +21,11 @@ string readWholeLine() {
     return input;
 }
 
+/*
+ * This function is used to configure whether the input string is a number
+ * INPUT: A string
+ * RETURN: Bool. True if input string is a number, otherwise false.
+ */
 bool isNum(string& str) {
     for (int i = 0; i < str.size(); i++) {
         if (!isdigit(str[i])) {
@@ -25,6 +35,13 @@ bool isNum(string& str) {
     return true;
 }
 
+/*
+ * Commodity is about an item which the user can buy and the manager can add or delete.
+ * ATTRIBUTE:
+ *  price: The price of the commodity, an integer.
+ *  description: The text which describe the commodity detail, a string.
+ *  commodityName: The name of the commodity, a string.
+ */
 class Commodity {
 protected:
     int price;
@@ -45,6 +62,12 @@ public:
         this->description = description;
     }
 
+    /*
+     * This method will show the full information of the commodity to user interface.
+     * There is a overloading version, with an argument amount which will output the information with the amount
+     * INPUT: None, or an integer specify the amount of this commodity
+     * RETURN: None
+     */
     void detail() {
         cout << commodityName << endl;
         cout << "price: " << price << endl;
@@ -60,20 +83,38 @@ public:
         cout << "----------------------------" << endl;
     }
 
+    /*
+     * The getter function of commodityName
+     */
     string getName() {
         return commodityName;
     }
 
+    /*
+     * The getter function of price
+     */
     int getPrice() {
         return price;
     }
 };
 
+/*
+ * [YOU NEED TO FINISH THIS CLASS]
+ * This is a list storing the existing commodity in the store.
+ * There are some method which can modify the content.
+ * You may use any data structure to complete this class.
+ */
 class CommodityList {
 private:
     vector<Commodity> commodities;
 
 public:
+    /*
+     * Print the full information of the commodities inside the list
+     * You must call Commodity.detail() to show the commodity information.
+     * INPUT: None
+     * RETURN: None
+     */
     void showCommoditiesDetail() {
         for (int i = 0; i < commodities.size(); i++) {
             cout << i + 1 << ". ";
@@ -81,37 +122,60 @@ public:
         }
     }
 
+    /*
+     * Print only the commodity name of the commodities inside the list
+     * You don't need to use Commodity.detail() here, just call the Commodity.getName() function is ok
+     * INPUT: None
+     * RETURN: None
+     */
     void showCommoditiesName() {
         for (int i = 0; i < commodities.size(); i++) {
             cout << i + 1 << ". " << commodities[i].getName() << endl;
         }
     }
 
+    /*
+     * Check whether the list is empty or not
+     * INPUT: None
+     * RETURN: Bool. True if the list is empty, otherwise false
+     */
     bool empty() {
         return commodities.empty();
     }
 
+    /*
+     * Return the size(or length) of the list
+     * INPUT: None
+     * RETURN: Integer. List size
+     */
     int size() {
         return (int)commodities.size();
     }
 
+    /*
+     * Return a commodity object at specified position
+     * INPUT: Integer. The index of that commodity
+     * RETURN: Commodity. The wanted commodity object
+     */
     Commodity get(int index) {
         return commodities[index];
     }
 
+    /*
+     * Push a new commodity object into the list
+     * INPUT: Commodity. The object need to be pushed
+     * RETURN: None
+     */
     void add(Commodity* newCommodity) {
-        bool isExist = false;
-        for (auto entry : commodities) {
-            if (entry.getName() == newCommodity->getName()) {
-                isExist = true;
-                break;
-            }
-        }
-        if (!isExist) {
-            commodities.push_back(*newCommodity);
-        }
+        commodities.push_back(*newCommodity);
     }
 
+    /*
+     * Check the input commodity object is existing inside the list
+     * If the commodity name is the same, we take those objects the same object
+     * INPUT: Commodity. The object need to be checked
+     * OUTPUT: Bool. True if the object existing, otherwise false
+     */
     bool isExist(Commodity* commodity) {
         bool exist = false;
 
@@ -125,16 +189,36 @@ public:
         return exist;
     }
 
+    /*
+     * Remove an object specified by the position
+     * INPUT: Integer. The position of the object which need to be removed
+     * OUTPUT: None
+     */
     void remove(int index) {
         commodities.erase(commodities.begin() + index);
     }
 };
 
+/*
+ * [YOU NEED TO FINISH THIS CLASS]
+ * The shopping cart is used to store the commodities user wanted.
+ * Because the same name represents the same object, if there is a commodity which have more than one object inside
+ * the cart, then it will be store as the same object and the cart must keep the amount of the object.
+ * You may use any data structure to complete this class.
+ */
 class ShoppingCart {
 private:
     unordered_map<string, pair<Commodity, int>> content;
 
 public:
+
+    /*
+     * Push an commodity object into the cart.
+     * Be careful that if the input object is existing in the list, then keep the amount of that object rather than
+     * actually push the object into the cart.
+     * INPUT: Commodity. The object need to be pushed.
+     * OUTPUT: None.
+     */
     void push(Commodity entry) {
         if (content.count(entry.getName())) {
             content[entry.getName()].second++;
@@ -144,6 +228,11 @@ public:
         }
     }
 
+    /*
+     * Show the content of the cart to user interface.
+     * INPUT: None.
+     * OUTPUT: None.
+     */
     void showCart() {
         int no = 1;
         for (auto& it : content) {
@@ -154,10 +243,20 @@ public:
         }
     }
 
+    /*
+     * Return the cart size. (The same object must be seen as one entry)
+     * INPUT: None.
+     * OUTPUT: Integer. The cart size.
+     */
     int size() {
         return (int)content.size();
     }
 
+    /*
+     * Remove an entry from the cart. Don't care about the amount of the commodity, just remove it.
+     * INPUT: The order of the entry.
+     * OUTPUT: None.
+     */
     void remove(int index) {
         auto it = content.begin();
         for (int i = 0; i < index; i++) {
@@ -166,6 +265,12 @@ public:
         content.erase(it);
     }
 
+    /*
+     * Check the total amount of price for the user.
+     * Remember to clear the list after checkout.
+     * INPUT: None.
+     * OUTPUT: Integer. The total price.
+     */
     int checkOut() {
         int totalPrice = 0;
 
@@ -178,11 +283,23 @@ public:
         return totalPrice;
     }
 
+    /*
+     * Check if the cart have nothing inside.
+     * INPUT: None.
+     * OUTPUT: Bool. True if the cart is empty, otherwise false.
+     */
     bool empty() {
         return content.empty();
     }
 };
 
+/*
+ * [DO NOT MODIFY ANY CODE HERE]
+ * The Store class manage the flow of control, and the interface showing to the user.
+ * Store use status to choose the interface to show. As the result, status control is very important here.
+ * If you can understand the code here, you will have great work on the above two class.
+ * The detail of Store is in the README
+ */
 class Store {
 private:
     enum UMode {USER, MANAGER} userStatus;
@@ -453,12 +570,12 @@ public:
     }
 
     void open() {
-        Commodity* com1 = new Commodity(100, "mashu", "an ugly man");
-        Commodity* com2 = new Commodity(50000, "macbook", "The macbook with macOS produced by Apple.inc");
-        Commodity* com3 = new Commodity(3000, "ASUS", "The high performance computer");
-        commodityList.add(com1);
-        commodityList.add(com2);
-        commodityList.add(com3);
+//        Commodity* com1 = new Commodity(100, "mashu", "an ugly man");
+//        Commodity* com2 = new Commodity(50000, "macbook", "The macbook with macOS produced by Apple.inc");
+//        Commodity* com3 = new Commodity(3000, "ASUS", "The high performance computer");
+//        commodityList.add(com1);
+//        commodityList.add(com2);
+//        commodityList.add(com3);
         storeStatus = SMode::OPENING;
         while (storeStatus != SMode::CLOSE) {
             userInterface();
