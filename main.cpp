@@ -32,6 +32,7 @@ protected:
     string commodityName;
 
 public:
+    ~Commodity() = default;
     Commodity() {
         price = 0;
         description = "";
@@ -72,10 +73,6 @@ class CommodityList {
 private:
     vector<Commodity> commodities;
 
-
-    /*
-     * TODO: The commodity name can not be repeated
-     * */
 public:
     void showCommoditiesDetail() {
         for (int i = 0; i < commodities.size(); i++) {
@@ -103,7 +100,29 @@ public:
     }
 
     void add(Commodity* newCommodity) {
-        commodities.push_back(*newCommodity);
+        bool isExist = false;
+        for (auto entry : commodities) {
+            if (entry.getName() == newCommodity->getName()) {
+                isExist = true;
+                break;
+            }
+        }
+        if (!isExist) {
+            commodities.push_back(*newCommodity);
+        }
+    }
+
+    bool isExist(Commodity* commodity) {
+        bool exist = false;
+
+        for (auto entry : commodities) {
+            if (entry.getName() == commodity->getName()) {
+                exist = true;
+                break;
+            }
+        }
+
+        return exist;
     }
 
     void remove(int index) {
@@ -222,16 +241,21 @@ private:
     void commodityInput() {
         string name, detail;
         int price;
+        Commodity* newCom;
 
         cout << "Please input the commodity name:" << endl;
         name = readWholeLine();
         cout << "Please input the commodity price:" << endl;
         price = numberInput();
-        cout << "Pease input the detail of the commodity:" << endl;
+        cout << "Please input the detail of the commodity:" << endl;
         detail = readWholeLine();
 
-        Commodity* newCom = new Commodity(price, name, detail);
-        commodityList.add(newCom);
+        newCom = new Commodity(price, name, detail);
+        if (commodityList.isExist(newCom)) {
+            cout << "[WARNING] " << name << " is exist in the store. If you want to edit it, please delete it first" << endl;
+        } else {
+            commodityList.add(newCom);
+        }
     }
 
     void deleteCommodity() {
@@ -446,11 +470,5 @@ public:
 int main() {
     Store csStore;
     csStore.open();
-//    int test;
-//    string testStr;
-//    cin >> test;
-//    cin.get();
-//    getline(cin, testStr);
-//    cout << testStr;
     return 0;
 }
