@@ -10,7 +10,7 @@ class Store;
 
 
 /*
- * The function used to read a full line into a string variable
+ * The function is used to read a full line into a string variable
  * INPUT: None
  * RETURN: Full line input by user
  * */
@@ -68,14 +68,14 @@ public:
      * INPUT: None, or an integer specify the amount of this commodity
      * RETURN: None
      */
-    void detail() {
+    virtual void detail() {
         cout << commodityName << endl;
         cout << "price: " << price << endl;
         cout << "description: " << description << endl;
         cout << "----------------------------" << endl;
     }
 
-    void detail(int amount) {
+    virtual void detail(int amount) {
         cout << commodityName << endl;
         cout << "price: " << price << endl;
         cout << "description: " << description << endl;
@@ -95,6 +95,68 @@ public:
      */
     int getPrice() {
         return price;
+    }
+};
+
+class Computer : Commodity {
+protected:
+    string cpu;
+    string gpu;
+    int ram;
+    int ssd;
+
+public:
+
+    void detail() override {
+        cout << commodityName << endl;
+        cout << "price: " << price << endl;
+        cout << "CPU: " << cpu << endl;
+        cout << "GPU: " << gpu << endl;
+        cout << "RAM: " << ram << "GB" << endl;
+        cout << "SSD: " << ssd << "GB" << endl;
+        cout << "description: " << description << endl;
+        cout << "----------------------------" << endl;
+    }
+
+    void detail(int amount) override {
+        cout << commodityName << endl;
+        cout << "price: " << price << endl;
+        cout << "CPU: " << cpu << endl;
+        cout << "GPU: " << gpu << endl;
+        cout << "RAM: " << ram << "GB" << endl;
+        cout << "SSD: " << ssd << "GB" << endl;
+        cout << "description: " << description << endl;
+        cout << "x " << amount << endl;
+        cout << "----------------------------" << endl;
+    }
+};
+
+class Keyboard : Commodity {
+protected:
+    int numOfKeys;
+    bool hasBacklit;
+    string axis;
+
+public:
+    void detail() override {
+        cout << commodityName << endl;
+        cout << "price: " << price << endl;
+        cout << "number of keys: " << numOfKeys << endl;
+        cout << "backlit: " << ((hasBacklit) ? "yes" : "no") << endl;
+        cout << "axis: " << axis << endl;
+        cout << "description: " << description << endl;
+        cout << "----------------------------" << endl;
+    }
+
+    void detail(int amount) override {
+        cout << commodityName << endl;
+        cout << "price: " << price << endl;
+        cout << "number of keys: " << numOfKeys << endl;
+        cout << "backlit: " << ((hasBacklit) ? "yes" : "no") << endl;
+        cout << "axis: " << axis << endl;
+        cout << "description: " << description << endl;
+        cout << "x " << amount << endl;
+        cout << "----------------------------" << endl;
     }
 };
 
