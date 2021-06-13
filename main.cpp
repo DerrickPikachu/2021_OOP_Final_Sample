@@ -440,8 +440,8 @@ public:
     Commodity* get(int index) {
         int catIndex = 0;
         for (; catIndex < category.size(); catIndex++) {
-            int len = commodities[category[catIndex]].size() - 1;
-            if (index > len) {
+            int len = (int)commodities[category[catIndex]].size();
+            if (index >= len) {
                 index -= len;
             } else {
                 break;
@@ -527,10 +527,6 @@ private:
     unordered_map<string, pair<Commodity*, int>> content;
 
 public:
-
-    /*
-     * TODO: Have some problem on buying
-     */
 
     /*
      * Push an commodity object into the cart.
