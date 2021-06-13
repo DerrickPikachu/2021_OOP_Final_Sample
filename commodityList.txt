@@ -1,0 +1,37 @@
+Computer
+3
+ASUS GX034
+30100
+i7 6770
+8
+GTX 960M
+128
+nice
+macbook
+40000
+M1
+8
+none
+256
+produced by Apple.inc
+MSI creater
+30000
+i5 8770
+8
+none
+128
+great
+Keyboard
+2
+K2
+2300
+65
+tea
+1
+best
+K8
+2300
+85
+red switch
+1
+nice

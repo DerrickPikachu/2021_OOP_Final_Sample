@@ -2,12 +2,14 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <fstream>
 
 using namespace std;
 
 class Commodity;
 class Store;
 class InputHandler;
+class FileHandler;
 
 
 class InputHandler {
@@ -21,6 +23,13 @@ public:
         string input;
         cin.get();
         getline(cin, input);
+        return input;
+    }
+
+    static string readWholeLine(fstream& file) {
+        string input;
+        file.get();
+        getline(file, input);
         return input;
     }
 
@@ -144,6 +153,10 @@ public:
         description = InputHandler::readWholeLine();
     }
 
+    virtual void save(fstream& file) {}
+
+    virtual void load(fstream& file) {}
+
     /*
      * The getter function of commodityName
      */
@@ -213,6 +226,27 @@ public:
         cout << "Please input the detail of the commodity:" << endl;
         description = InputHandler::readWholeLine();
     }
+
+    void save(fstream& file) override {
+        file << commodityName << endl
+             << price << endl
+             << cpu << endl
+             << ram << endl
+             << gpu << endl
+             << ssd << endl
+             << description << endl;
+    }
+
+    void load(fstream& file) override {
+        getline(file, commodityName);
+//        commodityName = InputHandler::readWholeLine(file);
+        file >> price;
+        cpu = InputHandler::readWholeLine(file);
+        file >> ram;
+        gpu = InputHandler::readWholeLine(file);
+        file >> ssd;
+        description = InputHandler::readWholeLine(file);
+    }
 };
 
 class Keyboard : public Commodity {
@@ -265,6 +299,24 @@ public:
         cout << "Please input the detail of the commodity:" << endl;
         description = InputHandler::readWholeLine();
     }
+
+    void save(fstream& file) override {
+        file << commodityName << endl
+             << price << endl
+             << numOfKeys << endl
+             << switches << endl
+             << hasBacklit << endl
+             << description << endl;
+    }
+
+    void load(fstream& file) override {
+        getline(file, commodityName);
+//        commodityName = InputHandler::readWholeLine(file);
+        file >> price >> numOfKeys;
+        switches = InputHandler::readWholeLine(file);
+        file >> hasBacklit;
+        description = InputHandler::readWholeLine(file);
+    }
 };
 
 /*
@@ -277,13 +329,36 @@ class CommodityList {
 private:
     unordered_map<string, vector<Commodity*>> commodities;
     vector<string> category = {"Computer", "Keyboard"};
+    string fileName = "commodityList.txt";
 //    vector<Commodity*> commodities;
 
 public:
 
     CommodityList() {
+        fstream file;
+        file.open(fileName, ios::in);
         for (auto& cat : category) {
             commodities[cat] = vector<Commodity*>();
+        }
+        if (file.is_open()) {
+            string cat;
+            while (getline(file, cat)) {
+                int len = 0;
+
+                file >> len;
+                file.get();
+                for (int i = 0; i < len; i++) {
+                    Commodity* com;
+                    if (cat == category[0]) {
+                        com = new Computer();
+                    } else {
+                        com = new Keyboard();
+                    }
+
+                    com->load(file);
+                    commodities[cat].push_back(com);
+                }
+            }
         }
     }
 
@@ -305,10 +380,6 @@ public:
             }
             cout << endl;
         }
-//        for (int i = 0; i < commodities.size(); i++) {
-//            cout << i + 1 << ". ";
-//            commodities[i]->detail();
-//        }
     }
 
     /*
@@ -328,9 +399,6 @@ public:
             }
             cout << endl;
         }
-//        for (int i = 0; i < commodities.size(); i++) {
-//            cout << i + 1 << ". " << commodities[i]->getName() << endl;
-//        }
     }
 
     /*
@@ -407,13 +475,6 @@ public:
             }
         }
 
-//        for (auto entry : commodities) {
-//            if (entry->getName() == commodity->getName()) {
-//                exist = true;
-//                break;
-//            }
-//        }
-
         return false;
     }
 
@@ -437,6 +498,21 @@ public:
         vector<Commodity*>& targetList = commodities[category[catIndex]];
         targetList.erase(targetList.begin() + index);
     }
+
+    void save() {
+        fstream file;
+        file.open(fileName, ios::out | ios::trunc);
+        for (auto& entry : commodities) {
+            string cat = entry.first;
+            vector<Commodity*>& list = entry.second;
+
+            file << cat << endl
+                 << list.size() << endl;
+            for (auto& com : list) {
+                com->save(file);
+            }
+        }
+    }
 };
 
 /*
@@ -451,6 +527,10 @@ private:
     unordered_map<string, pair<Commodity*, int>> content;
 
 public:
+
+    /*
+     * TODO: Have some problem on buying
+     */
 
     /*
      * Push an commodity object into the cart.
@@ -780,6 +860,7 @@ public:
         while (storeStatus != SMode::CLOSE) {
             userInterface();
         }
+        commodityList.save();
     }
 };
 
