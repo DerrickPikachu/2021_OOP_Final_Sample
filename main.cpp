@@ -219,7 +219,7 @@ class Keyboard : public Commodity {
 protected:
     int numOfKeys;
     bool hasBacklit;
-    string axis;
+    string switches;
 
 public:
     ~Keyboard() = default;
@@ -234,7 +234,7 @@ public:
         cout << "price: " << price << endl;
         cout << "number of keys: " << numOfKeys << endl;
         cout << "backlit: " << ((hasBacklit) ? "yes" : "no") << endl;
-        cout << "axis: " << axis << endl;
+        cout << "switches: " << switches << endl;
         cout << "description: " << description << endl;
         cout << "----------------------------" << endl;
     }
@@ -244,7 +244,7 @@ public:
         cout << "price: " << price << endl;
         cout << "number of keys: " << numOfKeys << endl;
         cout << "backlit: " << ((hasBacklit) ? "yes" : "no") << endl;
-        cout << "axis: " << axis << endl;
+        cout << "switches: " << switches << endl;
         cout << "description: " << description << endl;
         cout << "x " << amount << endl;
         cout << "----------------------------" << endl;
@@ -257,8 +257,8 @@ public:
         price = InputHandler::numberInput();
         cout << "What is the amount of the keys?" << endl;
         numOfKeys = InputHandler::numberInput();
-        cout << "What is the axis of the keyboard?" << endl;
-        axis = InputHandler::readWholeLine();
+        cout << "What is the switches of the keyboard?" << endl;
+        switches = InputHandler::readWholeLine();
         cout << "Is this keyboard has backlit? 1. yes, 2. no" << endl;
         int choice = InputHandler::getInput(2);
         hasBacklit = (choice == 1);
@@ -275,9 +275,18 @@ public:
  */
 class CommodityList {
 private:
-    vector<Commodity*> commodities;
+    unordered_map<string, vector<Commodity*>> commodities;
+    vector<string> category = {"Computer", "Keyboard"};
+//    vector<Commodity*> commodities;
 
 public:
+
+    CommodityList() {
+        for (auto& cat : category) {
+            commodities[cat] = vector<Commodity*>();
+        }
+    }
+
     /*
      * Print the full information of the commodities inside the list
      * You must call Commodity.detail() to show the commodity information.
@@ -285,10 +294,21 @@ public:
      * RETURN: None
      */
     void showCommoditiesDetail() {
-        for (int i = 0; i < commodities.size(); i++) {
-            cout << i + 1 << ". ";
-            commodities[i]->detail();
+        int no = 1;
+        for (auto& entry : commodities) {
+            cout << entry.first << " type:" << endl;
+            vector<Commodity*>& list = entry.second;
+            for (auto it : list) {
+                cout << no << ". ";
+                it->detail();
+                no++;
+            }
+            cout << endl;
         }
+//        for (int i = 0; i < commodities.size(); i++) {
+//            cout << i + 1 << ". ";
+//            commodities[i]->detail();
+//        }
     }
 
     /*
@@ -298,9 +318,19 @@ public:
      * RETURN: None
      */
     void showCommoditiesName() {
-        for (int i = 0; i < commodities.size(); i++) {
-            cout << i + 1 << ". " << commodities[i]->getName() << endl;
+        int no = 1;
+        for (auto& entry : commodities) {
+            cout << entry.first << " type:" << endl;
+            vector<Commodity*> list = entry.second;
+            for (auto it : list) {
+                cout << no << ". " << it->getName() << endl;
+                no++;
+            }
+            cout << endl;
         }
+//        for (int i = 0; i < commodities.size(); i++) {
+//            cout << i + 1 << ". " << commodities[i]->getName() << endl;
+//        }
     }
 
     /*
@@ -309,7 +339,12 @@ public:
      * RETURN: Bool. True if the list is empty, otherwise false
      */
     bool empty() {
-        return commodities.empty();
+        for (auto& entry : commodities) {
+            if (!entry.second.empty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /*
@@ -318,7 +353,15 @@ public:
      * RETURN: Integer. List size
      */
     int size() {
-        return (int)commodities.size();
+        int len = 0;
+        for (auto& entry : commodities) {
+            len += (int)entry.second.size();
+        }
+        return len;
+    }
+
+    vector<string> getCategory() {
+        return category;
     }
 
     /*
@@ -327,7 +370,16 @@ public:
      * RETURN: Commodity. The wanted commodity object
      */
     Commodity* get(int index) {
-        return commodities[index];
+        int catIndex = 0;
+        for (; catIndex < category.size(); catIndex++) {
+            int len = commodities[category[catIndex]].size() - 1;
+            if (index > len) {
+                index -= len;
+            } else {
+                break;
+            }
+        }
+        return commodities[category[catIndex]][index];
     }
 
     /*
@@ -335,8 +387,8 @@ public:
      * INPUT: Commodity. The object need to be pushed
      * RETURN: None
      */
-    void add(Commodity* newCommodity) {
-        commodities.push_back(newCommodity);
+    void add(Commodity* newCommodity, string& cat) {
+        commodities[cat].push_back(newCommodity);
     }
 
     /*
@@ -346,16 +398,23 @@ public:
      * OUTPUT: Bool. True if the object existing, otherwise false
      */
     bool isExist(Commodity* commodity) {
-        bool exist = false;
-
         for (auto entry : commodities) {
-            if (entry->getName() == commodity->getName()) {
-                exist = true;
-                break;
+            vector<Commodity*> list = entry.second;
+            for (auto item : list) {
+                if (item->getName() == commodity->getName()) {
+                    return true;
+                }
             }
         }
 
-        return exist;
+//        for (auto entry : commodities) {
+//            if (entry->getName() == commodity->getName()) {
+//                exist = true;
+//                break;
+//            }
+//        }
+
+        return false;
     }
 
     /*
@@ -364,7 +423,19 @@ public:
      * OUTPUT: None
      */
     void remove(int index) {
-        commodities.erase(commodities.begin() + index);
+        int catIndex = 0;
+
+        for (; catIndex < category.size(); catIndex++) {
+            int len = (int)commodities[category[catIndex]].size();
+            if (index >= len) {
+                index -= len;
+            } else {
+                break;
+            }
+        }
+
+        vector<Commodity*>& targetList = commodities[category[catIndex]];
+        targetList.erase(targetList.begin() + index);
     }
 };
 
@@ -479,6 +550,10 @@ private:
     void commodityInput() {
         Commodity* newCom;
 
+        /*
+         * TODO: use getCategory to iteratively output the category content
+         */
+        vector<string> category = commodityList.getCategory();
         cout << "Which type of commodity you want to add?" << endl
              << "1. Computer, 2. Keyboard" << endl;
 
@@ -495,7 +570,7 @@ private:
             cout << "[WARNING] " << newCom->getName()
                  << " is exist in the store. If you want to edit it, please delete it first" << endl;
         } else {
-            commodityList.add(newCom);
+            commodityList.add(newCom, category[choice - 1]);
         }
     }
 
@@ -609,6 +684,7 @@ private:
                 cout << "Which one do you want to delete(type the commodity index)?" << endl
                      << "Or type 0 to regret" << endl;
                 int index = InputHandler::getInput(cart.size());
+                // **
                 if (index == 0) {
                     break;
                 }
