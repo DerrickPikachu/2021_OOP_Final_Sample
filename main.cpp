@@ -9,14 +9,15 @@ using namespace std;
 class Commodity;
 class Store;
 class InputHandler;
-class FileHandler;
 
 
 class InputHandler {
 public:
     /*
-     * The function is used to read a full line into a string variable
-     * INPUT: None
+     * The function is used to read a full line into a string variable.
+     * It read the redundant '\n' character to prevent the problem of getline function.
+     * There is an overload version which can read from the specified data stream.
+     * INPUT: None, or fstream
      * RETURN: Full line input by user
      * */
     static string readWholeLine() {
@@ -47,12 +48,23 @@ public:
         return true;
     }
 
+    /*
+     * Check the input string is a valid number.
+     * First check the input is a number or not, then identify whether it is bigger than 0
+     * INPUT: string
+     * RETURN bool
+     */
     static bool isValidNum(string& str) {
         if (isNum(str) && stoi(str) <= 0)
             return false;
         return true;
     }
 
+    /*
+     * Get a number from the user. This function will check the input validation.
+     * INPUT: none
+     * OUTPUT: integer, the input number
+     */
     static int numberInput() {
         string input;
         cin >> input;
@@ -63,6 +75,9 @@ public:
         return stoi(input);
     }
 
+    /*
+     * This function is used in function getInput. Checking the input range is inside the specified range
+     */
     static int inputCheck(string input, int maxChoiceLen, bool noZero) {
         // Change input to the general integer
         int choice = 0;
@@ -81,6 +96,12 @@ public:
         }
     }
 
+    /*
+     * Get the input from the user, and limit the input between the range [0, maxChoiceLen].
+     * If noZero is signaled. Then the range will be [1, maxChoiceLen]
+     * INPUT: integer, bool(option)
+     * OUTPUT: integer, the choice number
+     */
     static int getInput(int maxChoiceLen, bool noZero = false) {
         string input;
 
@@ -144,6 +165,11 @@ public:
         cout << "----------------------------" << endl;
     }
 
+    /*
+     * Use this function to get the information data from the user, this will init the object.
+     * INPUT: none
+     * OUTPUT: none
+     */
     virtual void userSpecifiedCommodity() {
         cout << "Please input the commodity name:" << endl;
         commodityName = InputHandler::readWholeLine();
@@ -153,6 +179,13 @@ public:
         description = InputHandler::readWholeLine();
     }
 
+    /*
+     * Save and load function is used to write the data to the file or read the data from the file.
+     * According to the input parameter fstream, they complete the I/O on the specified file.
+     * There have no definition of those method, because it is used to be override in the derived class.
+     * INPUT: fstream
+     * OUTPUT: none
+     */
     virtual void save(fstream& file) {}
 
     virtual void load(fstream& file) {}
@@ -171,6 +204,13 @@ public:
         return price;
     }
 };
+
+/*
+ * [YOU SHOULD FINISH THREE CATEGORY OF DERIVED COMMODITY CLASS HERE]
+ * Please try your best to complete the definition of three class.
+ * Use the knowledge you learned from this course.
+ * You should follow the OOP concept.
+ */
 
 class Computer : public Commodity {
 protected:
