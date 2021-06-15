@@ -52,10 +52,10 @@ public:
      * Check the input string is a valid number.
      * First check the input is a number or not, then identify whether it is bigger than 0
      * INPUT: string
-     * RETURN bool
+     * RETURN: bool
      */
     static bool isValidNum(string& str) {
-        if (isNum(str) && stoi(str) <= 0)
+        if (!isNum(str) || (isNum(str) && stoi(str) <= 0))
             return false;
         return true;
     }
@@ -76,7 +76,7 @@ public:
     }
 
     /*
-     * This function is used in function getInput. Checking the input range is inside the specified range
+     * This function is used in function getInput. Check the input range is inside the specified range
      */
     static int inputCheck(string input, int maxChoiceLen, bool noZero) {
         // Change input to the general integer
@@ -206,8 +206,8 @@ public:
 };
 
 /*
- * [YOU SHOULD FINISH THREE CATEGORY OF DERIVED COMMODITY CLASS HERE]
- * Please try your best to complete the definition of three class.
+ * [YOU SHOULD FINISH THREE TYPES OF DERIVED COMMODITY CLASS HERE]
+ * Please try your best to complete the definition of three classes.
  * Use the knowledge you learned from this course.
  * You should follow the OOP concept.
  */
@@ -663,6 +663,10 @@ private:
     CommodityList commodityList;
     ShoppingCart cart;
 
+    /*
+     * You should finish this method, because you need to identify the type of commodity, and instantiate a
+     * corresponding derived commodity class here.
+     */
     void commodityInput() {
         Commodity* newCom;
 
